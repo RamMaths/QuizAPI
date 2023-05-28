@@ -6,5 +6,8 @@ router
   .route('/register')
   .post(userController.createUser);
 
+router
+  .route('/validate')
+  .post(userController.validateUser);
 
 module.exports = router;

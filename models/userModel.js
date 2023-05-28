@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    minlength: [10, 'The name must have more than 10 characters'],
-    maxlength: [40, 'The name must have less than 40 characters']
+    minlength: [8, 'The name must have more than 10 characters'],
+    maxlength: [20, 'The name must have less than 40 characters']
   },
   password: {
     type: String,
@@ -23,14 +23,26 @@ const userSchema = new mongoose.Schema({
   highscore: {
     type: Number,
     default: 0
+  },
+  otp: {
+    type: String,
+    required: true
   }
 });
 
+const getHash = (salt, password) => {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, salt, function(err, hash) {
+      if(err) reject(err);
+      else resolve(hash);
+    });
+  })
+}
+
 userSchema.methods.generateHash = async function(password) {
   const salt = await bcrypt.genSalt(13);
-  bcrypt.hash(password, salt, function(err, hash) {
-    return hash;
-  });
+  const newPass = await getHash(salt, password);
+  return newPass;
 };
 
 userSchema.methods.validPassword = async function(password) {
@@ -39,6 +51,4 @@ userSchema.methods.validPassword = async function(password) {
 };
 
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema); 
