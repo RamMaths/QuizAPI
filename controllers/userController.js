@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const otpGenerator = require('../utils/otpGenerator');
+const sendValidation = require('../utils/sendMail');
 
-exports.createUser = async (req, res) => {
+exports.signUp = async (req, res) => {
   const data = req.body;
   try {
     const new_user = new User({
@@ -27,18 +28,28 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.validateUser = async(req, res) => {
+exports.login = async(req, res) => {
   try {
     const data = req.body;
     const user = await User.find({username: data.username});
+
+    //validate the user
     const valid = await user[0].validPassword(data.password);
 
     if(valid) {
+      //if valid genereate a new otp
       await User.findByIdAndUpdate(user[0].id, {otp: otpGenerator()}, {
         //set this to true to return the new updated document
         new: true,
         runValidators: true
       });
+        
+      //send otp 
+      await sendValidation.call(user[0]);
+
+      res.status(201).json({
+        status: 'success',
+      })
     } else {
       throw new Error('Credentials does not match');
     }
